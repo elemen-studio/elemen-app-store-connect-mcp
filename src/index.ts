@@ -115,6 +115,109 @@ class AppStoreConnectServer {
           }
         },
 
+        // App Info & Localization Tools
+        {
+          name: "list_app_infos",
+          description: "List all app infos for an app. Returns app info IDs needed for managing app-level localizations (title, subtitle).",
+          inputSchema: {
+            type: "object",
+            properties: {
+              appId: {
+                type: "string",
+                description: "The ID of the app"
+              },
+              limit: {
+                type: "number",
+                description: "Maximum number of results to return (default: 100)",
+                minimum: 1,
+                maximum: 200
+              }
+            },
+            required: ["appId"]
+          }
+        },
+        {
+          name: "list_app_info_localizations",
+          description: "List all localizations for an app info. Returns localization IDs and current title/subtitle for each locale.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              appInfoId: {
+                type: "string",
+                description: "The ID of the app info (get this from list_app_infos)"
+              },
+              limit: {
+                type: "number",
+                description: "Maximum number of results to return (default: 100)",
+                minimum: 1,
+                maximum: 200
+              }
+            },
+            required: ["appInfoId"]
+          }
+        },
+        {
+          name: "create_app_info_localization",
+          description: "Create a new app info localization for a locale (e.g., add French title and subtitle)",
+          inputSchema: {
+            type: "object",
+            properties: {
+              appInfoId: {
+                type: "string",
+                description: "The ID of the app info (get this from list_app_infos)"
+              },
+              locale: {
+                type: "string",
+                description: "The locale code (e.g., 'fr-FR', 'ja', 'de-DE')"
+              },
+              name: {
+                type: "string",
+                description: "The app title for this locale"
+              },
+              subtitle: {
+                type: "string",
+                description: "The app subtitle for this locale"
+              },
+              privacyPolicyUrl: {
+                type: "string",
+                description: "Privacy policy URL for this locale"
+              },
+              privacyChoicesUrl: {
+                type: "string",
+                description: "Privacy choices URL for this locale"
+              },
+              privacyPolicyText: {
+                type: "string",
+                description: "Privacy policy text for this locale"
+              }
+            },
+            required: ["appInfoId", "locale"]
+          }
+        },
+        {
+          name: "update_app_info_localization",
+          description: "Update a field in an app info localization (e.g., change title or subtitle for a locale)",
+          inputSchema: {
+            type: "object",
+            properties: {
+              appInfoLocalizationId: {
+                type: "string",
+                description: "The ID of the app info localization to update"
+              },
+              field: {
+                type: "string",
+                enum: ["name", "subtitle", "privacyPolicyUrl", "privacyChoicesUrl", "privacyPolicyText"],
+                description: "The field to update"
+              },
+              value: {
+                type: "string",
+                description: "The new value for the field"
+              }
+            },
+            required: ["appInfoLocalizationId", "field", "value"]
+          }
+        },
+
         // Beta Testing Tools
         {
           name: "list_beta_groups",
@@ -1087,6 +1190,19 @@ class AppStoreConnectServer {
           case "get_app_info":
             const appInfo = await this.appHandlers.getAppInfo(args as any);
             return formatResponse(appInfo);
+
+          // App Info Localizations
+          case "list_app_infos":
+            return formatResponse(await this.appHandlers.listAppInfos(args as any));
+
+          case "list_app_info_localizations":
+            return formatResponse(await this.appHandlers.listAppInfoLocalizations(args as any));
+
+          case "create_app_info_localization":
+            return formatResponse(await this.appHandlers.createAppInfoLocalization(args as any));
+
+          case "update_app_info_localization":
+            return formatResponse(await this.appHandlers.updateAppInfoLocalization(args as any));
 
           // Beta Testing
           case "list_beta_groups":

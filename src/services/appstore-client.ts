@@ -67,4 +67,16 @@ export class AppStoreConnectClient {
       size: response.headers['content-length']
     };
   }
+
+  async uploadChunk(url: string, data: Buffer, headers: Record<string, string>): Promise<void> {
+    await axios.put(url, data, {
+      headers: {
+        ...headers,
+        'Content-Length': data.length.toString(),
+      },
+      maxBodyLength: Infinity,
+      maxContentLength: Infinity,
+      timeout: 120000,
+    });
+  }
 }

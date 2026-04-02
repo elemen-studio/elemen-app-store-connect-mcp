@@ -37,3 +37,114 @@ export const SCREENSHOT_DIMENSIONS: Record<ScreenshotDisplayType, { width: numbe
   'APP_IPAD_10_5': { width: 1668, height: 2224 },
   'APP_IPAD_9_7': { width: 1536, height: 2048 },
 };
+
+// --- Screenshot Set types ---
+
+export interface AppScreenshotSetCreateRequest {
+  data: {
+    type: 'appScreenshotSets';
+    attributes: {
+      screenshotDisplayType: ScreenshotDisplayType;
+    };
+    relationships: {
+      appStoreVersionLocalization: {
+        data: {
+          type: 'appStoreVersionLocalizations';
+          id: string;
+        };
+      };
+    };
+  };
+}
+
+export interface AppScreenshotSet {
+  id: string;
+  type: 'appScreenshotSets';
+  attributes: {
+    screenshotDisplayType: ScreenshotDisplayType;
+  };
+  relationships?: Record<string, any>;
+  links?: { self: string };
+}
+
+export interface AppScreenshotSetResponse {
+  data: AppScreenshotSet;
+  links?: { self: string };
+}
+
+export interface ListAppScreenshotSetsResponse {
+  data: AppScreenshotSet[];
+  links?: { self?: string; next?: string };
+  meta?: { paging?: { total: number; limit: number } };
+}
+
+// --- Screenshot types ---
+
+export interface UploadOperation {
+  method: string;
+  url: string;
+  length: number;
+  offset: number;
+  requestHeaders: { name: string; value: string }[];
+}
+
+export interface AppScreenshot {
+  id: string;
+  type: 'appScreenshots';
+  attributes: {
+    fileSize: number;
+    fileName: string;
+    sourceFileChecksum?: string;
+    assetDeliveryState?: {
+      state: string;
+      errors?: { code: string; description: string }[];
+    };
+    uploadOperations?: UploadOperation[];
+    imageAsset?: {
+      templateUrl: string;
+      width: number;
+      height: number;
+    };
+  };
+  links?: { self: string };
+}
+
+export interface AppScreenshotResponse {
+  data: AppScreenshot;
+  links?: { self: string };
+}
+
+export interface ListAppScreenshotsResponse {
+  data: AppScreenshot[];
+  links?: { self?: string; next?: string };
+  meta?: { paging?: { total: number; limit: number } };
+}
+
+export interface AppScreenshotCreateRequest {
+  data: {
+    type: 'appScreenshots';
+    attributes: {
+      fileSize: number;
+      fileName: string;
+    };
+    relationships: {
+      appScreenshotSet: {
+        data: {
+          type: 'appScreenshotSets';
+          id: string;
+        };
+      };
+    };
+  };
+}
+
+export interface AppScreenshotCommitRequest {
+  data: {
+    type: 'appScreenshots';
+    id: string;
+    attributes: {
+      sourceFileChecksum: string;
+      uploaded: true;
+    };
+  };
+}

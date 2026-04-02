@@ -1,151 +1,6 @@
 # App Store Connect MCP Server
 
-A Model Context Protocol (MCP) server for interacting with the App Store Connect API. This server provides tools for managing apps, beta testers, bundle IDs, devices, app metadata, and capabilities in App Store Connect.
-
-[![Install MCP Server](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/install-mcp?name=app-store-connect&config=JTdCJTIyY29tbWFuZCUyMiUzQSUyMm5weCUyMC15JTIwYXBwc3RvcmUtY29ubmVjdC1tY3Atc2VydmVyJTIyJTdE)
-
-## Overview
-
-The App Store Connect MCP Server is a comprehensive tool that bridges the gap between AI and Apple's App Store Connect ecosystem. Built on the Model Context Protocol (MCP), this server enables developers to interact with their App Store Connect data directly through conversational AI, making app management, beta testing, and analytics more accessible than ever.
-
-**Key Benefits:**
-- 🤖 **AI-Powered App Management**: Use natural language to manage your iOS and macOS apps
-- 📊 **Comprehensive Analytics**: Access detailed app performance, sales, and user engagement data
-- 👥 **Streamlined Beta Testing**: Efficiently manage beta groups and testers
-- 🌍 **Localization Management**: Update app descriptions, keywords, and metadata across all languages
-- 🔧 **Developer Tools Integration**: List Xcode project schemes and integrate with development workflows
-- 🔐 **Secure Authentication**: Uses official App Store Connect API with JWT authentication
-- 🚀 **Real-time Data**: Access up-to-date information directly from Apple's systems
-
-**Who This Is For:**
-- iOS/macOS developers managing apps in App Store Connect
-- Development teams coordinating beta testing programs
-- Product managers analyzing app performance and user engagement
-- Marketing teams managing app metadata and localizations
-- DevOps engineers automating app store workflows
-- Anyone looking to streamline their Apple developer experience
-
-This server transforms complex App Store Connect operations into simple conversational commands, whether you're checking app analytics, managing beta testers, updating app descriptions, or exploring your development pipeline.
-
-<a href="https://glama.ai/mcp/servers/z4j2smln34"><img width="380" height="200" src="https://glama.ai/mcp/servers/z4j2smln34/badge" alt="app-store-connect-mcp-server MCP server" /></a>
-<a href="https://smithery.ai/server/appstore-connect-mcp-server" style="text-decoration: none;">
-  <img alt="Smithery Installations" src="https://smithery.ai/badge/appstore-connect-mcp-server" />
-</a>
-[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/joshuarileydev-app-store-connect-mcp-server-badge.png)](https://mseep.ai/app/joshuarileydev-app-store-connect-mcp-server)
-
-## Features
-
-- **App Management**
-  - List all apps
-  - Get detailed app information
-  - View app metadata and relationships
-
-- **Beta Testing**
-  - List beta groups
-  - List beta testers
-  - Add/remove testers from groups
-  - Manage beta test configurations
-  - View beta feedback with screenshots and device information
-
-- **App Store Version Localizations**
-  - Create new app store versions with release scheduling
-  - List all app store versions for an app
-  - List all localizations for an app version
-  - Create new localizations for additional locales
-  - Get specific localization details
-  - Update app descriptions, keywords, and promotional text
-  - Manage marketing and support URLs
-  - Update "What's New" text for releases
-
-- **App Info Localizations** ✨ **NEW**
-  - List app infos for an app
-  - List app info localizations (title, subtitle) for each locale
-  - Create new app info localizations for additional locales
-  - Update app title, subtitle, and privacy URLs per locale
-
-- **Screenshot Management** ✨ **NEW**
-  - Create screenshot sets for specific display types and localizations
-  - List screenshot sets for a localization
-  - List screenshots within a set
-  - Upload screenshot images from local filesystem
-  - Delete individual screenshots
-
-- **Bundle ID Management**
-  - List bundle IDs
-  - Create new bundle IDs
-  - Get bundle ID details
-  - Enable/disable capabilities
-
-- **Device Management**
-  - List registered devices
-  - Filter by device type, platform, status
-  - View device details
-
-- **User Management**
-  - List team members
-  - View user roles and permissions
-  - Filter users by role and access
-
-- **Analytics & Reports**
-  - Create analytics report requests for apps
-  - Download App Store engagement, commerce, and usage analytics
-  - Access performance and frameworks usage reports
-  - Download sales and trends reports (daily, weekly, monthly, yearly)
-  - Download finance reports by region
-
-- **Xcode Development Tools**
-  - List available schemes in Xcode projects and workspaces
-  - Integrate with development workflows and CI/CD pipelines
-
-## Installation
-
-### Using Smithery
-
-To install App Store Connect Server for Claude Desktop automatically:
-
-```bash
-npx @smithery/cli install appstore-connect-mcp-server --client claude
-```
-
-### Manual Installation
-
-```bash
-npm install @joshuarileydev/app-store-connect-mcp-server
-```
-
-## Configuration
-
-Add the following to your Claude Desktop configuration file:
-
-### macOS
-```bash
-~/Library/Application Support/Claude/claude_desktop_config.json
-```
-
-### Windows
-```bash
-%APPDATA%\Claude\claude_desktop_config.json
-```
-
-```json
-{
-  "mcpServers": {
-    "app-store-connect": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "appstore-connect-mcp-server"
-      ],
-      "env": {
-        "APP_STORE_CONNECT_KEY_ID": "YOUR_KEY_ID",
-        "APP_STORE_CONNECT_ISSUER_ID": "YOUR_ISSUER_ID",
-        "APP_STORE_CONNECT_P8_PATH": "/path/to/your/auth-key.p8",
-        "APP_STORE_CONNECT_VENDOR_NUMBER": "YOUR_VENDOR_NUMBER_OPTIONAL"
-      }
-    }
-  }
-}
-```
+A Model Context Protocol (MCP) server for interacting with the App Store Connect API. This server provides tools for managing apps, beta testers, bundle IDs, devices, app metadata, screenshots, and capabilities in App Store Connect.
 
 ## Authentication
 
@@ -166,7 +21,7 @@ To enable sales and finance reporting tools, you'll also need:
 
 ## Complete Tool Reference
 
-### 📱 App Management Tools
+### App Management Tools
 
 #### `list_apps`
 Get a list of all apps in App Store Connect.
@@ -196,7 +51,7 @@ Get detailed information about a specific app.
 "Get detailed information about my app including app store versions"
 ```
 
-### 👥 Beta Testing Tools
+### Beta Testing Tools
 
 #### `list_beta_groups`
 List all beta testing groups (internal and external).
@@ -287,7 +142,7 @@ Get detailed information about a specific beta feedback screenshot.
 "Download screenshot from feedback FEEDBACK123"
 ```
 
-### 🌍 App Store Version Localization Tools
+### App Store Version Localization Tools
 
 #### `create_app_store_version`
 Create a new app store version for an app.
@@ -387,7 +242,7 @@ Create a new localization for an app store version (e.g., add French, Japanese, 
 "Add Japanese locale for version VERSION123 with description and keywords"
 ```
 
-### 📝 App Info Localization Tools
+### App Info Localization Tools
 
 #### `list_app_infos`
 List all app infos for an app. Returns app info IDs needed for managing app-level localizations (title, subtitle).
@@ -448,7 +303,7 @@ Update a field in an app info localization (e.g., change title or subtitle for a
 "Update privacy policy URL for LOCALE123"
 ```
 
-### 📸 Screenshot Management Tools
+### Screenshot Management Tools
 
 #### `create_app_screenshot_set`
 Create a screenshot set for a specific localization and display type.
@@ -515,7 +370,7 @@ Delete a specific screenshot from App Store Connect.
 "Remove screenshot SCREENSHOT123 from App Store Connect"
 ```
 
-### 🔤 Bundle ID Management Tools
+### Bundle ID Management Tools
 
 #### `create_bundle_id`
 Register a new bundle ID for app development.
@@ -589,7 +444,7 @@ Disable a capability for a bundle ID.
 "Remove capability CAP123 from bundle ID"
 ```
 
-### 📱 Device Management Tools
+### Device Management Tools
 
 #### `list_devices`
 Get a list of all devices registered to your team.
@@ -608,7 +463,7 @@ Get a list of all devices registered to your team.
 "List iPhones sorted by date added"
 ```
 
-### 👤 User Management Tools
+### User Management Tools
 
 #### `list_users`
 Get a list of all users on your App Store Connect team.
@@ -628,7 +483,7 @@ Get a list of all users on your App Store Connect team.
 "List users with their visible apps"
 ```
 
-### 📊 Analytics & Reports Tools
+### Analytics & Reports Tools
 
 #### `create_analytics_report_request`
 Create a new analytics report request for an app.
@@ -684,7 +539,7 @@ Download data from an analytics report segment.
 "Download data from https://api.appstoreconnect.apple.com/..."
 ```
 
-### 💰 Sales & Finance Reports Tools (Requires Vendor Number)
+### Sales & Finance Reports Tools (Requires Vendor Number)
 
 #### `download_sales_report`
 Download sales and trends reports.
@@ -718,7 +573,7 @@ Download finance reports for a specific region.
 "Get finance report for 2024-01 region Z1"
 ```
 
-### 🔧 Xcode Development Tools
+### Xcode Development Tools
 
 #### `list_schemes`
 List all available schemes in an Xcode project or workspace.
@@ -730,31 +585,6 @@ List all available schemes in an Xcode project or workspace.
 ```
 "List schemes in /Users/john/MyApp/MyApp.xcodeproj"
 "Show available schemes for MyApp.xcworkspace"
-```
-
-## Error Handling
-
-The server implements proper error handling for:
-- Invalid authentication
-- Missing required parameters
-- API rate limits
-- Network issues
-- Invalid operations
-
-## Development
-
-```bash
-# Install dependencies
-npm install
-
-# Build the project
-npm run build
-
-# Run tests
-npm test
-
-# Run type checking
-npm run type-check
 ```
 
 ## License

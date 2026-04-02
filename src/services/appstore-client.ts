@@ -68,6 +68,7 @@ export class AppStoreConnectClient {
     };
   }
 
+  // Uses axios directly (not this.axiosInstance) because upload URLs are presigned Apple CDN URLs, not API endpoints. No Bearer token needed.
   async uploadChunk(url: string, data: Buffer, headers: Record<string, string>): Promise<void> {
     await axios.put(url, data, {
       headers: {

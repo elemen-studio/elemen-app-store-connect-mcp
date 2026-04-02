@@ -93,7 +93,15 @@ export class ScreenshotHandlers {
     validateRequired(args, ['appScreenshotSetId', 'filePath']);
 
     // Step 1: Read the file and compute MD5 checksum
-    const fileData = await fs.readFile(filePath);
+    let fileData: Buffer;
+    try {
+      fileData = await fs.readFile(filePath);
+    } catch (err: any) {
+      if (err.code === 'ENOENT') {
+        throw new Error(`Screenshot file not found: ${filePath}`);
+      }
+      throw err;
+    }
     const fileSize = fileData.length;
     const fileName = path.basename(filePath);
     const checksum = crypto.createHash('md5').update(fileData).digest('hex');
@@ -157,11 +165,12 @@ export class ScreenshotHandlers {
 
   async deleteAppScreenshot(args: {
     appScreenshotId: string;
-  }): Promise<void> {
+  }): Promise<{ success: boolean; message: string }> {
     const { appScreenshotId } = args;
 
     validateRequired(args, ['appScreenshotId']);
 
     await this.client.delete(`/appScreenshots/${appScreenshotId}`);
+    return { success: true, message: 'Screenshot deleted successfully' };
   }
 }

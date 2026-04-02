@@ -12,15 +12,16 @@ import axios from 'axios';
 
 import { AppStoreConnectConfig } from './types/index.js';
 import { AppStoreConnectClient } from './services/index.js';
-import { 
-  AppHandlers, 
-  BetaHandlers, 
-  BundleHandlers, 
-  DeviceHandlers, 
-  UserHandlers, 
+import {
+  AppHandlers,
+  BetaHandlers,
+  BundleHandlers,
+  DeviceHandlers,
+  UserHandlers,
   AnalyticsHandlers,
   XcodeHandlers,
-  LocalizationHandlers 
+  LocalizationHandlers,
+  ScreenshotHandlers
 } from './handlers/index.js';
 
 // Load environment variables
@@ -42,6 +43,7 @@ class AppStoreConnectServer {
   private analyticsHandlers: AnalyticsHandlers;
   private xcodeHandlers: XcodeHandlers;
   private localizationHandlers: LocalizationHandlers;
+  private screenshotHandlers: ScreenshotHandlers;
 
   constructor() {
     this.server = new Server({
@@ -62,6 +64,7 @@ class AppStoreConnectServer {
     this.analyticsHandlers = new AnalyticsHandlers(this.client, config);
     this.xcodeHandlers = new XcodeHandlers();
     this.localizationHandlers = new LocalizationHandlers(this.client);
+    this.screenshotHandlers = new ScreenshotHandlers(this.client);
 
     this.setupHandlers();
   }
@@ -813,6 +816,111 @@ class AppStoreConnectServer {
           }
         },
 
+        // Screenshot Management Tools
+        {
+          name: "create_app_screenshot_set",
+          description: "Create a screenshot set for a specific localization and display type",
+          inputSchema: {
+            type: "object",
+            properties: {
+              appStoreVersionLocalizationId: {
+                type: "string",
+                description: "The ID of the app store version localization"
+              },
+              screenshotDisplayType: {
+                type: "string",
+                description: "The display type for the screenshot set",
+                enum: [
+                  "APP_IPHONE_67",
+                  "APP_IPHONE_65",
+                  "APP_IPHONE_61",
+                  "APP_IPHONE_58",
+                  "APP_IPHONE_55",
+                  "APP_IPAD_PRO_3GEN_129",
+                  "APP_IPAD_PRO_129",
+                  "APP_IPAD_PRO_11",
+                  "APP_IPAD_10_9",
+                  "APP_IPAD_10_5",
+                  "APP_IPAD_9_7"
+                ]
+              }
+            },
+            required: ["appStoreVersionLocalizationId", "screenshotDisplayType"]
+          }
+        },
+        {
+          name: "list_app_screenshot_sets",
+          description: "List all screenshot sets for a specific app store version localization",
+          inputSchema: {
+            type: "object",
+            properties: {
+              appStoreVersionLocalizationId: {
+                type: "string",
+                description: "The ID of the app store version localization"
+              },
+              limit: {
+                type: "number",
+                description: "Maximum number of screenshot sets to return (default: 100)",
+                minimum: 1,
+                maximum: 200
+              }
+            },
+            required: ["appStoreVersionLocalizationId"]
+          }
+        },
+        {
+          name: "list_app_screenshots",
+          description: "List all screenshots in a screenshot set",
+          inputSchema: {
+            type: "object",
+            properties: {
+              appScreenshotSetId: {
+                type: "string",
+                description: "The ID of the screenshot set"
+              },
+              limit: {
+                type: "number",
+                description: "Maximum number of screenshots to return (default: 100)",
+                minimum: 1,
+                maximum: 200
+              }
+            },
+            required: ["appScreenshotSetId"]
+          }
+        },
+        {
+          name: "upload_app_screenshot",
+          description: "Upload a screenshot image file to a screenshot set. Reads the file from the local filesystem, uploads it using Apple's chunked upload protocol, and commits it.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              appScreenshotSetId: {
+                type: "string",
+                description: "The ID of the screenshot set to upload to"
+              },
+              filePath: {
+                type: "string",
+                description: "Absolute path to the screenshot image file on the local filesystem (e.g., /Users/you/screenshots/iphone_1.png)"
+              }
+            },
+            required: ["appScreenshotSetId", "filePath"]
+          }
+        },
+        {
+          name: "delete_app_screenshot",
+          description: "Delete a specific screenshot from App Store Connect",
+          inputSchema: {
+            type: "object",
+            properties: {
+              appScreenshotId: {
+                type: "string",
+                description: "The ID of the screenshot to delete"
+              }
+            },
+            required: ["appScreenshotId"]
+          }
+        },
+
         // Xcode Development Tools
         {
           name: "list_schemes",
@@ -974,6 +1082,22 @@ class AppStoreConnectServer {
 
           case "update_app_store_version_localization":
             return formatResponse(await this.localizationHandlers.updateAppStoreVersionLocalization(args as any));
+
+          // Screenshot Management
+          case "create_app_screenshot_set":
+            return formatResponse(await this.screenshotHandlers.createAppScreenshotSet(args as any));
+
+          case "list_app_screenshot_sets":
+            return formatResponse(await this.screenshotHandlers.listAppScreenshotSets(args as any));
+
+          case "list_app_screenshots":
+            return formatResponse(await this.screenshotHandlers.listAppScreenshots(args as any));
+
+          case "upload_app_screenshot":
+            return formatResponse(await this.screenshotHandlers.uploadAppScreenshot(args as any));
+
+          case "delete_app_screenshot":
+            return formatResponse(await this.screenshotHandlers.deleteAppScreenshot(args as any));
 
           // Bundle IDs
           case "create_bundle_id":

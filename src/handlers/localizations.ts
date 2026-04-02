@@ -59,11 +59,10 @@ export class LocalizationHandlers {
     
     const params: Record<string, any> = {
       limit: sanitizeLimit(limit),
-      'filter[appStoreVersion]': appStoreVersionId
     };
-    
+
     return this.client.get<ListAppStoreVersionLocalizationsResponse>(
-      '/appStoreVersionLocalizations',
+      `/appStoreVersions/${appStoreVersionId}/appStoreVersionLocalizations`,
       params
     );
   }

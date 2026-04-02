@@ -9,7 +9,12 @@ export type ScreenshotDisplayType =
   | 'APP_IPAD_PRO_11'
   | 'APP_IPAD_10_9'
   | 'APP_IPAD_10_5'
-  | 'APP_IPAD_9_7';
+  | 'APP_IPAD_9_7'
+  | 'WATCH_SERIES_10'
+  | 'WATCH_SERIES_7'
+  | 'WATCH_SERIES_4'
+  | 'WATCH_SERIES_3'
+  | 'WATCH_ULTRA';
 
 export interface ScreenshotSet {
   id: string;
@@ -36,6 +41,11 @@ export const SCREENSHOT_DIMENSIONS: Record<ScreenshotDisplayType, { width: numbe
   'APP_IPAD_10_9': { width: 1640, height: 2360 },
   'APP_IPAD_10_5': { width: 1668, height: 2224 },
   'APP_IPAD_9_7': { width: 1536, height: 2048 },
+  'WATCH_SERIES_10': { width: 416, height: 496 },
+  'WATCH_SERIES_7': { width: 396, height: 484 },
+  'WATCH_SERIES_4': { width: 368, height: 448 },
+  'WATCH_SERIES_3': { width: 312, height: 390 },
+  'WATCH_ULTRA': { width: 410, height: 502 },
 };
 
 // --- Screenshot Set types ---

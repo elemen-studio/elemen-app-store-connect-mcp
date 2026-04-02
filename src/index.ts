@@ -410,6 +410,48 @@ class AppStoreConnectServer {
           }
         },
         {
+          name: "create_app_store_version_localization",
+          description: "Create a new localization for an app store version (e.g., add French, Japanese, etc.)",
+          inputSchema: {
+            type: "object",
+            properties: {
+              appStoreVersionId: {
+                type: "string",
+                description: "The ID of the app store version"
+              },
+              locale: {
+                type: "string",
+                description: "The locale code (e.g., 'en-US', 'fr-FR', 'ja', 'de-DE', 'es-ES')"
+              },
+              description: {
+                type: "string",
+                description: "App description for this locale"
+              },
+              keywords: {
+                type: "string",
+                description: "Search keywords for this locale (comma-separated)"
+              },
+              marketingUrl: {
+                type: "string",
+                description: "Marketing URL for this locale"
+              },
+              promotionalText: {
+                type: "string",
+                description: "Promotional text for this locale"
+              },
+              supportUrl: {
+                type: "string",
+                description: "Support URL for this locale"
+              },
+              whatsNew: {
+                type: "string",
+                description: "What's new text for this locale"
+              }
+            },
+            required: ["appStoreVersionId", "locale"]
+          }
+        },
+        {
           name: "get_app_store_version_localization",
           description: "Get detailed information about a specific app store version localization",
           inputSchema: {
@@ -841,7 +883,12 @@ class AppStoreConnectServer {
                   "APP_IPAD_PRO_11",
                   "APP_IPAD_10_9",
                   "APP_IPAD_10_5",
-                  "APP_IPAD_9_7"
+                  "APP_IPAD_9_7",
+                  "WATCH_SERIES_10",
+                  "WATCH_SERIES_7",
+                  "WATCH_SERIES_4",
+                  "WATCH_SERIES_3",
+                  "WATCH_ULTRA"
                 ]
               }
             },
@@ -1076,6 +1123,9 @@ class AppStoreConnectServer {
 
           case "list_app_store_version_localizations":
             return formatResponse(await this.localizationHandlers.listAppStoreVersionLocalizations(args as any));
+
+          case "create_app_store_version_localization":
+            return formatResponse(await this.localizationHandlers.createAppStoreVersionLocalization(args as any));
 
           case "get_app_store_version_localization":
             return formatResponse(await this.localizationHandlers.getAppStoreVersionLocalization(args as any));

@@ -59,7 +59,30 @@ export interface AppStoreVersionLocalizationUpdateRequest {
   };
 }
 
-export type AppStoreVersionLocalizationField = 
+export interface AppStoreVersionLocalizationCreateRequest {
+  data: {
+    type: 'appStoreVersionLocalizations';
+    attributes: {
+      locale: string;
+      description?: string;
+      keywords?: string;
+      marketingUrl?: string;
+      promotionalText?: string;
+      supportUrl?: string;
+      whatsNew?: string;
+    };
+    relationships: {
+      appStoreVersion: {
+        data: {
+          type: 'appStoreVersions';
+          id: string;
+        };
+      };
+    };
+  };
+}
+
+export type AppStoreVersionLocalizationField =
   | 'description'
   | 'keywords' 
   | 'marketingUrl'

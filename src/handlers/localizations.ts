@@ -1,7 +1,8 @@
 import { AppStoreConnectClient } from '../services/index.js';
-import { 
-  ListAppStoreVersionLocalizationsResponse, 
+import {
+  ListAppStoreVersionLocalizationsResponse,
   AppStoreVersionLocalizationResponse,
+  AppStoreVersionLocalizationCreateRequest,
   AppStoreVersionLocalizationUpdateRequest,
   AppStoreVersionLocalizationField,
   ListAppStoreVersionsResponse,
@@ -64,6 +65,49 @@ export class LocalizationHandlers {
     return this.client.get<ListAppStoreVersionLocalizationsResponse>(
       `/appStoreVersions/${appStoreVersionId}/appStoreVersionLocalizations`,
       params
+    );
+  }
+
+  async createAppStoreVersionLocalization(args: {
+    appStoreVersionId: string;
+    locale: string;
+    description?: string;
+    keywords?: string;
+    marketingUrl?: string;
+    promotionalText?: string;
+    supportUrl?: string;
+    whatsNew?: string;
+  }): Promise<AppStoreVersionLocalizationResponse> {
+    const { appStoreVersionId, locale, ...optionalFields } = args;
+
+    validateRequired(args, ['appStoreVersionId', 'locale']);
+
+    const requestData: AppStoreVersionLocalizationCreateRequest = {
+      data: {
+        type: 'appStoreVersionLocalizations',
+        attributes: {
+          locale,
+          ...(optionalFields.description && { description: optionalFields.description }),
+          ...(optionalFields.keywords && { keywords: optionalFields.keywords }),
+          ...(optionalFields.marketingUrl && { marketingUrl: optionalFields.marketingUrl }),
+          ...(optionalFields.promotionalText && { promotionalText: optionalFields.promotionalText }),
+          ...(optionalFields.supportUrl && { supportUrl: optionalFields.supportUrl }),
+          ...(optionalFields.whatsNew && { whatsNew: optionalFields.whatsNew }),
+        },
+        relationships: {
+          appStoreVersion: {
+            data: {
+              type: 'appStoreVersions',
+              id: appStoreVersionId,
+            },
+          },
+        },
+      },
+    };
+
+    return this.client.post<AppStoreVersionLocalizationResponse>(
+      '/appStoreVersionLocalizations',
+      requestData
     );
   }
 

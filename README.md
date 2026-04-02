@@ -47,14 +47,28 @@ This server transforms complex App Store Connect operations into simple conversa
   - Manage beta test configurations
   - View beta feedback with screenshots and device information
 
-- **App Store Version Localizations** ✨ **NEW**
+- **App Store Version Localizations**
   - Create new app store versions with release scheduling
   - List all app store versions for an app
   - List all localizations for an app version
+  - Create new localizations for additional locales
   - Get specific localization details
   - Update app descriptions, keywords, and promotional text
   - Manage marketing and support URLs
   - Update "What's New" text for releases
+
+- **App Info Localizations** ✨ **NEW**
+  - List app infos for an app
+  - List app info localizations (title, subtitle) for each locale
+  - Create new app info localizations for additional locales
+  - Update app title, subtitle, and privacy URLs per locale
+
+- **Screenshot Management** ✨ **NEW**
+  - Create screenshot sets for specific display types and localizations
+  - List screenshot sets for a localization
+  - List screenshots within a set
+  - Upload screenshot images from local filesystem
+  - Delete individual screenshots
 
 - **Bundle ID Management**
   - List bundle IDs
@@ -352,6 +366,153 @@ Update a specific field in an app store version localization.
 "Update description for localization LOCALE123 to 'Amazing new app description'"
 "Change keywords for LOCALE123 to 'productivity, tasks, organize'"
 "Update what's new text for LOCALE123 to 'Bug fixes and performance improvements'"
+```
+
+#### `create_app_store_version_localization`
+Create a new localization for an app store version (e.g., add French, Japanese, etc.).
+
+**Parameters:**
+- `appStoreVersionId` (required): The ID of the app store version
+- `locale` (required): The locale code (e.g., 'en-US', 'fr-FR', 'ja', 'de-DE', 'es-ES')
+- `description` (optional): App description for this locale
+- `keywords` (optional): Search keywords for this locale (comma-separated)
+- `marketingUrl` (optional): Marketing URL for this locale
+- `promotionalText` (optional): Promotional text for this locale
+- `supportUrl` (optional): Support URL for this locale
+- `whatsNew` (optional): What's new text for this locale
+
+**Example:**
+```
+"Create French localization for version VERSION123"
+"Add Japanese locale for version VERSION123 with description and keywords"
+```
+
+### 📝 App Info Localization Tools
+
+#### `list_app_infos`
+List all app infos for an app. Returns app info IDs needed for managing app-level localizations (title, subtitle).
+
+**Parameters:**
+- `appId` (required): The ID of the app
+- `limit` (optional): Maximum number of results to return (default: 100, max: 200)
+
+**Example:**
+```
+"List app infos for app 123456789"
+"Get app info IDs for app 123456789"
+```
+
+#### `list_app_info_localizations`
+List all localizations for an app info. Returns localization IDs and current title/subtitle for each locale.
+
+**Parameters:**
+- `appInfoId` (required): The ID of the app info (get this from list_app_infos)
+- `limit` (optional): Maximum number of results to return (default: 100, max: 200)
+
+**Example:**
+```
+"List all localizations for app info APPINFO123"
+"Show title and subtitle for each locale of app info APPINFO123"
+```
+
+#### `create_app_info_localization`
+Create a new app info localization for a locale (e.g., add French title and subtitle).
+
+**Parameters:**
+- `appInfoId` (required): The ID of the app info (get this from list_app_infos)
+- `locale` (required): The locale code (e.g., 'fr-FR', 'ja', 'de-DE')
+- `name` (optional): The app title for this locale
+- `subtitle` (optional): The app subtitle for this locale
+- `privacyPolicyUrl` (optional): Privacy policy URL for this locale
+- `privacyChoicesUrl` (optional): Privacy choices URL for this locale
+- `privacyPolicyText` (optional): Privacy policy text for this locale
+
+**Example:**
+```
+"Create French localization for app info APPINFO123 with title 'Mon App'"
+"Add Japanese locale for app info APPINFO123 with title and subtitle"
+```
+
+#### `update_app_info_localization`
+Update a field in an app info localization (e.g., change title or subtitle for a locale).
+
+**Parameters:**
+- `appInfoLocalizationId` (required): The ID of the app info localization to update
+- `field` (required): The field to update (name, subtitle, privacyPolicyUrl, privacyChoicesUrl, privacyPolicyText)
+- `value` (required): The new value for the field
+
+**Example:**
+```
+"Update title for localization LOCALE123 to 'My Awesome App'"
+"Change subtitle for LOCALE123 to 'The best app ever'"
+"Update privacy policy URL for LOCALE123"
+```
+
+### 📸 Screenshot Management Tools
+
+#### `create_app_screenshot_set`
+Create a screenshot set for a specific localization and display type.
+
+**Parameters:**
+- `appStoreVersionLocalizationId` (required): The ID of the app store version localization
+- `screenshotDisplayType` (required): The display type (e.g., APP_IPHONE_67, APP_IPHONE_65, APP_IPAD_PRO_3GEN_129, WATCH_SERIES_10, WATCH_ULTRA, etc.)
+
+**Example:**
+```
+"Create iPhone 6.7 inch screenshot set for localization LOCALE123"
+"Create iPad Pro screenshot set for LOCALE123"
+"Create Apple Watch Ultra screenshot set for LOCALE123"
+```
+
+#### `list_app_screenshot_sets`
+List all screenshot sets for a specific app store version localization.
+
+**Parameters:**
+- `appStoreVersionLocalizationId` (required): The ID of the app store version localization
+- `limit` (optional): Maximum number of screenshot sets to return (default: 100, max: 200)
+
+**Example:**
+```
+"List screenshot sets for localization LOCALE123"
+"Show all display types with screenshots for LOCALE123"
+```
+
+#### `list_app_screenshots`
+List all screenshots in a screenshot set.
+
+**Parameters:**
+- `appScreenshotSetId` (required): The ID of the screenshot set
+- `limit` (optional): Maximum number of screenshots to return (default: 100, max: 200)
+
+**Example:**
+```
+"List screenshots in set SET123"
+"Show all screenshots for screenshot set SET123"
+```
+
+#### `upload_app_screenshot`
+Upload a screenshot image file to a screenshot set. Reads the file from the local filesystem and uploads it using Apple's chunked upload protocol.
+
+**Parameters:**
+- `appScreenshotSetId` (required): The ID of the screenshot set to upload to
+- `filePath` (required): Absolute path to the screenshot image file (e.g., /Users/you/screenshots/iphone_1.png)
+
+**Example:**
+```
+"Upload /Users/me/screenshots/home.png to screenshot set SET123"
+"Add screenshot from /tmp/screenshot.png to set SET123"
+```
+
+#### `delete_app_screenshot`
+Delete a specific screenshot from App Store Connect.
+
+**Parameters:**
+- `appScreenshotId` (required): The ID of the screenshot to delete
+
+**Example:**
+```
+"Delete screenshot SCREENSHOT123"
+"Remove screenshot SCREENSHOT123 from App Store Connect"
 ```
 
 ### 🔤 Bundle ID Management Tools

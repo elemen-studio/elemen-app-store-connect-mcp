@@ -7,3 +7,5 @@ export { AnalyticsHandlers } from './analytics.js';
 export { XcodeHandlers } from './xcode.js';
 export { LocalizationHandlers } from './localizations.js';
 export { ScreenshotHandlers } from './screenshots.js';
+export { SubscriptionHandlers } from './subscriptions.js';
+export { IapHandlers } from './iaps.js';

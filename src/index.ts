@@ -21,7 +21,9 @@ import {
   AnalyticsHandlers,
   XcodeHandlers,
   LocalizationHandlers,
-  ScreenshotHandlers
+  ScreenshotHandlers,
+  SubscriptionHandlers,
+  IapHandlers
 } from './handlers/index.js';
 
 // Load environment variables
@@ -44,6 +46,8 @@ class AppStoreConnectServer {
   private xcodeHandlers: XcodeHandlers;
   private localizationHandlers: LocalizationHandlers;
   private screenshotHandlers: ScreenshotHandlers;
+  private subscriptionHandlers: SubscriptionHandlers;
+  private iapHandlers: IapHandlers;
 
   constructor() {
     this.server = new Server({
@@ -65,6 +69,8 @@ class AppStoreConnectServer {
     this.xcodeHandlers = new XcodeHandlers();
     this.localizationHandlers = new LocalizationHandlers(this.client);
     this.screenshotHandlers = new ScreenshotHandlers(this.client);
+    this.subscriptionHandlers = new SubscriptionHandlers(this.client);
+    this.iapHandlers = new IapHandlers(this.client);
 
     this.setupHandlers();
   }
@@ -1071,6 +1077,440 @@ class AppStoreConnectServer {
           }
         },
 
+        // Subscription Group Tools
+        {
+          name: "list_subscription_groups",
+          description: "List all subscription groups for an app. Every auto-renewable subscription belongs to a group.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              appId: { type: "string", description: "The app ID" },
+              limit: { type: "number", description: "Maximum number of results", default: 100 }
+            },
+            required: ["appId"]
+          }
+        },
+        {
+          name: "create_subscription_group",
+          description: "Create a new subscription group for an app. The referenceName is internal-only; user-visible names are set via group localizations.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              appId: { type: "string", description: "The app ID" },
+              referenceName: { type: "string", description: "Internal reference name for the group" }
+            },
+            required: ["appId", "referenceName"]
+          }
+        },
+        {
+          name: "update_subscription_group",
+          description: "Update a subscription group's reference name",
+          inputSchema: {
+            type: "object",
+            properties: {
+              groupId: { type: "string" },
+              referenceName: { type: "string" }
+            },
+            required: ["groupId", "referenceName"]
+          }
+        },
+        {
+          name: "delete_subscription_group",
+          description: "Delete a subscription group. Only allowed if no approved subscriptions remain in the group.",
+          inputSchema: {
+            type: "object",
+            properties: { groupId: { type: "string" } },
+            required: ["groupId"]
+          }
+        },
+
+        // Subscription Group Localization Tools
+        {
+          name: "list_subscription_group_localizations",
+          description: "List localizations for a subscription group (the user-visible group name shown on the manage-subscriptions screen)",
+          inputSchema: {
+            type: "object",
+            properties: {
+              groupId: { type: "string" },
+              limit: { type: "number", default: 100 }
+            },
+            required: ["groupId"]
+          }
+        },
+        {
+          name: "create_subscription_group_localization",
+          description: "Create a localization for a subscription group",
+          inputSchema: {
+            type: "object",
+            properties: {
+              groupId: { type: "string" },
+              locale: { type: "string", description: "Locale code (e.g., 'en-US')" },
+              name: { type: "string", description: "User-visible group name" },
+              customAppName: { type: "string", description: "Optional custom app name override for this locale" }
+            },
+            required: ["groupId", "locale", "name"]
+          }
+        },
+        {
+          name: "update_subscription_group_localization",
+          description: "Update a subscription group localization",
+          inputSchema: {
+            type: "object",
+            properties: {
+              localizationId: { type: "string" },
+              name: { type: "string" },
+              customAppName: { type: "string" }
+            },
+            required: ["localizationId"]
+          }
+        },
+        {
+          name: "delete_subscription_group_localization",
+          description: "Delete a subscription group localization",
+          inputSchema: {
+            type: "object",
+            properties: { localizationId: { type: "string" } },
+            required: ["localizationId"]
+          }
+        },
+
+        // Subscription Tools
+        {
+          name: "list_subscriptions",
+          description: "List all auto-renewable subscriptions in a group",
+          inputSchema: {
+            type: "object",
+            properties: {
+              groupId: { type: "string" },
+              limit: { type: "number", default: 100 }
+            },
+            required: ["groupId"]
+          }
+        },
+        {
+          name: "get_subscription",
+          description: "Get details of a single subscription",
+          inputSchema: {
+            type: "object",
+            properties: { subscriptionId: { type: "string" } },
+            required: ["subscriptionId"]
+          }
+        },
+        {
+          name: "create_subscription",
+          description: "Create an auto-renewable subscription. NOTE: productId is immutable after creation. groupLevel controls upgrade/downgrade ordering within the group (1 = highest tier).",
+          inputSchema: {
+            type: "object",
+            properties: {
+              groupId: { type: "string" },
+              productId: { type: "string", description: "Globally unique product ID (immutable)" },
+              name: { type: "string", description: "Internal reference name" },
+              subscriptionPeriod: {
+                type: "string",
+                enum: ["ONE_WEEK", "ONE_MONTH", "TWO_MONTHS", "THREE_MONTHS", "SIX_MONTHS", "ONE_YEAR"]
+              },
+              groupLevel: { type: "number", description: "Family rank within the group (1 = highest)" },
+              familySharable: { type: "boolean" },
+              reviewNote: { type: "string" },
+              availableInAllTerritories: { type: "boolean" }
+            },
+            required: ["groupId", "productId", "name", "subscriptionPeriod", "groupLevel"]
+          }
+        },
+        {
+          name: "update_subscription",
+          description: "Update a subscription. productId cannot be changed.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              subscriptionId: { type: "string" },
+              name: { type: "string" },
+              subscriptionPeriod: {
+                type: "string",
+                enum: ["ONE_WEEK", "ONE_MONTH", "TWO_MONTHS", "THREE_MONTHS", "SIX_MONTHS", "ONE_YEAR"]
+              },
+              groupLevel: { type: "number" },
+              familySharable: { type: "boolean" },
+              reviewNote: { type: "string" },
+              availableInAllTerritories: { type: "boolean" }
+            },
+            required: ["subscriptionId"]
+          }
+        },
+        {
+          name: "delete_subscription",
+          description: "Delete a subscription (only allowed if it has never been approved)",
+          inputSchema: {
+            type: "object",
+            properties: { subscriptionId: { type: "string" } },
+            required: ["subscriptionId"]
+          }
+        },
+
+        // Subscription Localization Tools
+        {
+          name: "list_subscription_localizations",
+          description: "List localizations for a subscription (display name + description per locale)",
+          inputSchema: {
+            type: "object",
+            properties: {
+              subscriptionId: { type: "string" },
+              limit: { type: "number", default: 100 }
+            },
+            required: ["subscriptionId"]
+          }
+        },
+        {
+          name: "create_subscription_localization",
+          description: "Create a subscription localization. name max 30 chars, description max 45 chars.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              subscriptionId: { type: "string" },
+              locale: { type: "string" },
+              name: { type: "string" },
+              description: { type: "string" }
+            },
+            required: ["subscriptionId", "locale", "name"]
+          }
+        },
+        {
+          name: "update_subscription_localization",
+          description: "Update a subscription localization",
+          inputSchema: {
+            type: "object",
+            properties: {
+              localizationId: { type: "string" },
+              name: { type: "string" },
+              description: { type: "string" }
+            },
+            required: ["localizationId"]
+          }
+        },
+        {
+          name: "delete_subscription_localization",
+          description: "Delete a subscription localization",
+          inputSchema: {
+            type: "object",
+            properties: { localizationId: { type: "string" } },
+            required: ["localizationId"]
+          }
+        },
+
+        // Subscription Pricing Tools
+        {
+          name: "list_subscription_price_points",
+          description: "List available price points for a subscription in a territory. Apple uses a fixed catalog of price points per territory; you must reference one of these IDs when creating a subscriptionPrice. Filter by customerPrice in the response to find your target.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              subscriptionId: { type: "string" },
+              territory: { type: "string", description: "Three-letter territory code (e.g., 'USA')" },
+              limit: { type: "number", default: 100 }
+            },
+            required: ["subscriptionId", "territory"]
+          }
+        },
+        {
+          name: "list_subscription_prices",
+          description: "List the current set prices (one per priced territory) for a subscription",
+          inputSchema: {
+            type: "object",
+            properties: {
+              subscriptionId: { type: "string" },
+              limit: { type: "number", default: 100 }
+            },
+            required: ["subscriptionId"]
+          }
+        },
+        {
+          name: "create_subscription_price",
+          description: "Set a price for a subscription in one territory by referencing a price point from the catalog. Call list_subscription_price_points first to find the pricePointId.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              subscriptionId: { type: "string" },
+              pricePointId: { type: "string", description: "ID from list_subscription_price_points" },
+              territory: { type: "string", description: "Three-letter territory code (e.g., 'USA')" },
+              startDate: { type: "string", description: "ISO 8601 start date. Omit for immediate." },
+              preserveCurrentPrice: { type: "boolean", description: "If true, existing subscribers keep their current price" }
+            },
+            required: ["subscriptionId", "pricePointId", "territory"]
+          }
+        },
+        {
+          name: "delete_subscription_price",
+          description: "Remove a scheduled or active subscription price",
+          inputSchema: {
+            type: "object",
+            properties: { priceId: { type: "string" } },
+            required: ["priceId"]
+          }
+        },
+
+        // In-App Purchase (v2) Tools
+        {
+          name: "list_in_app_purchases",
+          description: "List one-time in-app purchases for an app (consumables, non-consumables, non-renewing subscriptions). Uses the v2 endpoint.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              appId: { type: "string" },
+              limit: { type: "number", default: 100 }
+            },
+            required: ["appId"]
+          }
+        },
+        {
+          name: "get_in_app_purchase",
+          description: "Get details of a single in-app purchase",
+          inputSchema: {
+            type: "object",
+            properties: { iapId: { type: "string" } },
+            required: ["iapId"]
+          }
+        },
+        {
+          name: "create_in_app_purchase",
+          description: "Create a one-time in-app purchase. NOTE: productId is immutable after creation.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              appId: { type: "string" },
+              productId: { type: "string" },
+              name: { type: "string", description: "Internal reference name" },
+              inAppPurchaseType: {
+                type: "string",
+                enum: ["CONSUMABLE", "NON_CONSUMABLE", "NON_RENEWING_SUBSCRIPTION"]
+              },
+              familySharable: { type: "boolean" },
+              reviewNote: { type: "string" },
+              availableInAllTerritories: { type: "boolean" }
+            },
+            required: ["appId", "productId", "name", "inAppPurchaseType"]
+          }
+        },
+        {
+          name: "update_in_app_purchase",
+          description: "Update an in-app purchase. productId and inAppPurchaseType cannot be changed.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              iapId: { type: "string" },
+              name: { type: "string" },
+              reviewNote: { type: "string" },
+              familySharable: { type: "boolean" },
+              availableInAllTerritories: { type: "boolean" }
+            },
+            required: ["iapId"]
+          }
+        },
+        {
+          name: "delete_in_app_purchase",
+          description: "Delete an in-app purchase (only allowed if it has never been approved)",
+          inputSchema: {
+            type: "object",
+            properties: { iapId: { type: "string" } },
+            required: ["iapId"]
+          }
+        },
+        {
+          name: "list_iap_localizations",
+          description: "List localizations for an in-app purchase",
+          inputSchema: {
+            type: "object",
+            properties: {
+              iapId: { type: "string" },
+              limit: { type: "number", default: 100 }
+            },
+            required: ["iapId"]
+          }
+        },
+        {
+          name: "create_iap_localization",
+          description: "Create an IAP localization. name max 30 chars, description max 45 chars.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              iapId: { type: "string" },
+              locale: { type: "string" },
+              name: { type: "string" },
+              description: { type: "string" }
+            },
+            required: ["iapId", "locale", "name"]
+          }
+        },
+        {
+          name: "update_iap_localization",
+          description: "Update an IAP localization",
+          inputSchema: {
+            type: "object",
+            properties: {
+              localizationId: { type: "string" },
+              name: { type: "string" },
+              description: { type: "string" }
+            },
+            required: ["localizationId"]
+          }
+        },
+        {
+          name: "delete_iap_localization",
+          description: "Delete an IAP localization",
+          inputSchema: {
+            type: "object",
+            properties: { localizationId: { type: "string" } },
+            required: ["localizationId"]
+          }
+        },
+        {
+          name: "list_iap_price_points",
+          description: "List available price points for an IAP in a territory. Catalog-based — reference these IDs when setting the schedule.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              iapId: { type: "string" },
+              territory: { type: "string", description: "Three-letter territory code (e.g., 'USA')" },
+              limit: { type: "number", default: 100 }
+            },
+            required: ["iapId", "territory"]
+          }
+        },
+        {
+          name: "get_iap_price_schedule",
+          description: "Get the current price schedule for an IAP",
+          inputSchema: {
+            type: "object",
+            properties: { iapId: { type: "string" } },
+            required: ["iapId"]
+          }
+        },
+        {
+          name: "set_iap_price_schedule",
+          description: "Replace the entire price schedule for an IAP. The baseTerritory is the reference territory Apple uses to derive prices in territories you didn't explicitly price. Call list_iap_price_points per territory first to obtain pricePointIds.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              iapId: { type: "string" },
+              baseTerritory: { type: "string", description: "Three-letter territory code used as the base (e.g., 'USA')" },
+              prices: {
+                type: "array",
+                description: "Array of price entries — one per territory you want to set explicitly",
+                items: {
+                  type: "object",
+                  properties: {
+                    pricePointId: { type: "string" },
+                    territory: { type: "string" },
+                    startDate: { type: "string", description: "ISO 8601, optional" },
+                    endDate: { type: "string", description: "ISO 8601, optional" }
+                  },
+                  required: ["pricePointId", "territory"]
+                }
+              }
+            },
+            required: ["iapId", "baseTerritory", "prices"]
+          }
+        },
+
         // Xcode Development Tools
         {
           name: "list_schemes",
@@ -1319,6 +1759,88 @@ class AppStoreConnectServer {
               );
             }
             return formatResponse(await this.analyticsHandlers.downloadFinanceReport(args as any));
+
+          // Subscription Groups
+          case "list_subscription_groups":
+            return formatResponse(await this.subscriptionHandlers.listSubscriptionGroups(args as any));
+          case "create_subscription_group":
+            return formatResponse(await this.subscriptionHandlers.createSubscriptionGroup(args as any));
+          case "update_subscription_group":
+            return formatResponse(await this.subscriptionHandlers.updateSubscriptionGroup(args as any));
+          case "delete_subscription_group":
+            return formatResponse(await this.subscriptionHandlers.deleteSubscriptionGroup(args as any));
+
+          // Subscription Group Localizations
+          case "list_subscription_group_localizations":
+            return formatResponse(await this.subscriptionHandlers.listSubscriptionGroupLocalizations(args as any));
+          case "create_subscription_group_localization":
+            return formatResponse(await this.subscriptionHandlers.createSubscriptionGroupLocalization(args as any));
+          case "update_subscription_group_localization":
+            return formatResponse(await this.subscriptionHandlers.updateSubscriptionGroupLocalization(args as any));
+          case "delete_subscription_group_localization":
+            return formatResponse(await this.subscriptionHandlers.deleteSubscriptionGroupLocalization(args as any));
+
+          // Subscriptions
+          case "list_subscriptions":
+            return formatResponse(await this.subscriptionHandlers.listSubscriptions(args as any));
+          case "get_subscription":
+            return formatResponse(await this.subscriptionHandlers.getSubscription(args as any));
+          case "create_subscription":
+            return formatResponse(await this.subscriptionHandlers.createSubscription(args as any));
+          case "update_subscription":
+            return formatResponse(await this.subscriptionHandlers.updateSubscription(args as any));
+          case "delete_subscription":
+            return formatResponse(await this.subscriptionHandlers.deleteSubscription(args as any));
+
+          // Subscription Localizations
+          case "list_subscription_localizations":
+            return formatResponse(await this.subscriptionHandlers.listSubscriptionLocalizations(args as any));
+          case "create_subscription_localization":
+            return formatResponse(await this.subscriptionHandlers.createSubscriptionLocalization(args as any));
+          case "update_subscription_localization":
+            return formatResponse(await this.subscriptionHandlers.updateSubscriptionLocalization(args as any));
+          case "delete_subscription_localization":
+            return formatResponse(await this.subscriptionHandlers.deleteSubscriptionLocalization(args as any));
+
+          // Subscription Pricing
+          case "list_subscription_price_points":
+            return formatResponse(await this.subscriptionHandlers.listSubscriptionPricePoints(args as any));
+          case "list_subscription_prices":
+            return formatResponse(await this.subscriptionHandlers.listSubscriptionPrices(args as any));
+          case "create_subscription_price":
+            return formatResponse(await this.subscriptionHandlers.createSubscriptionPrice(args as any));
+          case "delete_subscription_price":
+            return formatResponse(await this.subscriptionHandlers.deleteSubscriptionPrice(args as any));
+
+          // In-App Purchases
+          case "list_in_app_purchases":
+            return formatResponse(await this.iapHandlers.listInAppPurchases(args as any));
+          case "get_in_app_purchase":
+            return formatResponse(await this.iapHandlers.getInAppPurchase(args as any));
+          case "create_in_app_purchase":
+            return formatResponse(await this.iapHandlers.createInAppPurchase(args as any));
+          case "update_in_app_purchase":
+            return formatResponse(await this.iapHandlers.updateInAppPurchase(args as any));
+          case "delete_in_app_purchase":
+            return formatResponse(await this.iapHandlers.deleteInAppPurchase(args as any));
+
+          // IAP Localizations
+          case "list_iap_localizations":
+            return formatResponse(await this.iapHandlers.listIapLocalizations(args as any));
+          case "create_iap_localization":
+            return formatResponse(await this.iapHandlers.createIapLocalization(args as any));
+          case "update_iap_localization":
+            return formatResponse(await this.iapHandlers.updateIapLocalization(args as any));
+          case "delete_iap_localization":
+            return formatResponse(await this.iapHandlers.deleteIapLocalization(args as any));
+
+          // IAP Pricing
+          case "list_iap_price_points":
+            return formatResponse(await this.iapHandlers.listIapPricePoints(args as any));
+          case "get_iap_price_schedule":
+            return formatResponse(await this.iapHandlers.getIapPriceSchedule(args as any));
+          case "set_iap_price_schedule":
+            return formatResponse(await this.iapHandlers.setIapPriceSchedule(args as any));
 
           // Xcode Development Tools
           case "list_schemes":

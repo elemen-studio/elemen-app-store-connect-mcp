@@ -2,6 +2,17 @@
 
 A Model Context Protocol (MCP) server for interacting with the App Store Connect API. This server provides tools for managing apps, beta testers, bundle IDs, devices, app metadata, screenshots, and capabilities in App Store Connect.
 
+## Build
+
+The repository ships TypeScript source only — `dist/` is gitignored. Build it locally before running:
+
+```bash
+npm install
+npm run build
+```
+
+This compiles `src/` to `dist/` and makes `dist/src/index.js` executable. Run the server with `npm start` or via the `appstore-connect-mcp` bin.
+
 ## Authentication
 
 ### Required Configuration
@@ -572,6 +583,239 @@ Download finance reports for a specific region.
 "Download finance report for January 2024 worldwide"
 "Get finance report for 2024-01 region Z1"
 ```
+
+### Subscription Tools
+
+Auto-renewable subscriptions live inside subscription groups. Apple uses a **catalog-based pricing model**: you don't pass a dollar amount — you look up a price point ID from Apple's catalog for the territory you want, then reference that ID when creating a price. The typical creation flow is: group → group localization → subscription → subscription localization → price.
+
+#### `list_subscription_groups`
+List all subscription groups for an app.
+
+**Parameters:**
+- `appId` (required): The app ID
+- `limit` (optional): Max results (default: 100)
+
+#### `create_subscription_group`
+Create a new subscription group. The `referenceName` is internal-only; user-visible names are set via group localizations.
+
+**Parameters:**
+- `appId` (required)
+- `referenceName` (required): Internal reference name
+
+#### `update_subscription_group`
+Update a group's reference name.
+
+**Parameters:**
+- `groupId` (required)
+- `referenceName` (required)
+
+#### `delete_subscription_group`
+Delete a subscription group. Only allowed if no approved subscriptions remain.
+
+**Parameters:**
+- `groupId` (required)
+
+#### `list_subscription_group_localizations`
+List localizations (the user-visible group name shown on the manage-subscriptions screen).
+
+**Parameters:**
+- `groupId` (required)
+- `limit` (optional)
+
+#### `create_subscription_group_localization`
+**Parameters:**
+- `groupId` (required)
+- `locale` (required): e.g. `en-US`
+- `name` (required): User-visible group name
+- `customAppName` (optional): Custom app name override for this locale
+
+#### `update_subscription_group_localization`
+**Parameters:**
+- `localizationId` (required)
+- `name` (optional)
+- `customAppName` (optional)
+
+#### `delete_subscription_group_localization`
+**Parameters:**
+- `localizationId` (required)
+
+#### `list_subscriptions`
+List all auto-renewable subscriptions in a group.
+
+**Parameters:**
+- `groupId` (required)
+- `limit` (optional)
+
+#### `get_subscription`
+**Parameters:**
+- `subscriptionId` (required)
+
+#### `create_subscription`
+Create an auto-renewable subscription. **Note:** `productId` is immutable after creation. `groupLevel` controls upgrade/downgrade ordering within the group (1 = highest tier).
+
+**Parameters:**
+- `groupId` (required)
+- `productId` (required): Globally unique product ID (immutable)
+- `name` (required): Internal reference name
+- `subscriptionPeriod` (required): One of `ONE_WEEK`, `ONE_MONTH`, `TWO_MONTHS`, `THREE_MONTHS`, `SIX_MONTHS`, `ONE_YEAR`
+- `groupLevel` (required): Family rank within the group (1 = highest)
+- `familySharable` (optional)
+- `reviewNote` (optional)
+- `availableInAllTerritories` (optional)
+
+#### `update_subscription`
+Update a subscription. `productId` cannot be changed.
+
+**Parameters:**
+- `subscriptionId` (required)
+- `name`, `subscriptionPeriod`, `groupLevel`, `familySharable`, `reviewNote`, `availableInAllTerritories` (all optional)
+
+#### `delete_subscription`
+Only allowed if the subscription has never been approved.
+
+**Parameters:**
+- `subscriptionId` (required)
+
+#### `list_subscription_localizations`
+List localizations (display name + description per locale).
+
+**Parameters:**
+- `subscriptionId` (required)
+- `limit` (optional)
+
+#### `create_subscription_localization`
+`name` max 30 chars, `description` max 45 chars.
+
+**Parameters:**
+- `subscriptionId` (required)
+- `locale` (required)
+- `name` (required)
+- `description` (optional)
+
+#### `update_subscription_localization`
+**Parameters:**
+- `localizationId` (required)
+- `name` (optional)
+- `description` (optional)
+
+#### `delete_subscription_localization`
+**Parameters:**
+- `localizationId` (required)
+
+#### `list_subscription_price_points`
+List available price points for a subscription in a territory. Apple uses a fixed catalog of price points per territory — you must reference one of these IDs when creating a `subscriptionPrice`. Inspect `customerPrice` on each result to find your target.
+
+**Parameters:**
+- `subscriptionId` (required)
+- `territory` (required): Three-letter territory code (e.g. `USA`)
+- `limit` (optional)
+
+#### `list_subscription_prices`
+List the currently set prices (one per priced territory).
+
+**Parameters:**
+- `subscriptionId` (required)
+- `limit` (optional)
+
+#### `create_subscription_price`
+Set a price for a subscription in one territory by referencing a catalog price point. Call `list_subscription_price_points` first to find the `pricePointId`. There is no global-pricing endpoint — call this once per territory.
+
+**Parameters:**
+- `subscriptionId` (required)
+- `pricePointId` (required): ID from `list_subscription_price_points`
+- `territory` (required): Three-letter territory code
+- `startDate` (optional): ISO 8601. Omit for immediate.
+- `preserveCurrentPrice` (optional): If true, existing subscribers keep their current price.
+
+#### `delete_subscription_price`
+Remove a scheduled or active price.
+
+**Parameters:**
+- `priceId` (required)
+
+### In-App Purchase Tools
+
+For one-time IAPs (consumables, non-consumables, non-renewing subscriptions). Uses the v2 endpoints. **Pricing is replace-the-whole-schedule:** unlike subscriptions, IAP pricing is set in a single call that swaps out the entire price schedule.
+
+#### `list_in_app_purchases`
+**Parameters:**
+- `appId` (required)
+- `limit` (optional)
+
+#### `get_in_app_purchase`
+**Parameters:**
+- `iapId` (required)
+
+#### `create_in_app_purchase`
+**Note:** `productId` is immutable after creation.
+
+**Parameters:**
+- `appId` (required)
+- `productId` (required)
+- `name` (required): Internal reference name
+- `inAppPurchaseType` (required): `CONSUMABLE`, `NON_CONSUMABLE`, or `NON_RENEWING_SUBSCRIPTION`
+- `familySharable` (optional)
+- `reviewNote` (optional)
+- `availableInAllTerritories` (optional)
+
+#### `update_in_app_purchase`
+`productId` and `inAppPurchaseType` cannot be changed.
+
+**Parameters:**
+- `iapId` (required)
+- `name`, `reviewNote`, `familySharable`, `availableInAllTerritories` (all optional)
+
+#### `delete_in_app_purchase`
+Only allowed if the IAP has never been approved.
+
+**Parameters:**
+- `iapId` (required)
+
+#### `list_iap_localizations`
+**Parameters:**
+- `iapId` (required)
+- `limit` (optional)
+
+#### `create_iap_localization`
+`name` max 30 chars, `description` max 45 chars.
+
+**Parameters:**
+- `iapId` (required)
+- `locale` (required)
+- `name` (required)
+- `description` (optional)
+
+#### `update_iap_localization`
+**Parameters:**
+- `localizationId` (required)
+- `name` (optional)
+- `description` (optional)
+
+#### `delete_iap_localization`
+**Parameters:**
+- `localizationId` (required)
+
+#### `list_iap_price_points`
+List available price points for an IAP in a territory. Catalog-based — reference these IDs in `set_iap_price_schedule`.
+
+**Parameters:**
+- `iapId` (required)
+- `territory` (required): Three-letter territory code
+- `limit` (optional)
+
+#### `get_iap_price_schedule`
+Get the current price schedule.
+
+**Parameters:**
+- `iapId` (required)
+
+#### `set_iap_price_schedule`
+Replace the entire price schedule for an IAP. The `baseTerritory` is the reference territory Apple uses to derive prices in territories you didn't explicitly price. Call `list_iap_price_points` per territory first to obtain `pricePointId`s.
+
+**Parameters:**
+- `iapId` (required)
+- `baseTerritory` (required): Three-letter territory code used as the base (e.g. `USA`)
+- `prices` (required): Array of `{ pricePointId, territory, startDate?, endDate? }` — one entry per territory you want to set explicitly
 
 ### Xcode Development Tools
 
